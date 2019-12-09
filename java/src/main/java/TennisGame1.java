@@ -1,76 +1,62 @@
+import java.util.HashMap;
+import java.util.Map;
 
 public class TennisGame1 implements TennisGame {
-    
-    private int m_score1 = 0;
-    private int m_score2 = 0;
-    private String player1Name;
-    private String player2Name;
+    private final String PLAYER1_NAME;
+    private final String PLAYER2_NAME;
+    private Map<String, Integer> playerScoreMap = new HashMap<>();
+    private Map<Integer, String> scoreTermMap = new HashMap<Integer, String>() {{
+        put(0, "Love");
+        put(1, "Fifteen");
+        put(2, "Thirty");
+        put(3, "Forty");
+    }};
 
     public TennisGame1(String player1Name, String player2Name) {
-        this.player1Name = player1Name;
-        this.player2Name = player2Name;
+        PLAYER1_NAME = player1Name;
+        PLAYER2_NAME = player2Name;
+        playerScoreMap.put(PLAYER1_NAME, 0);
+        playerScoreMap.put(PLAYER2_NAME, 0);
     }
 
     public void wonPoint(String playerName) {
-        if (playerName == "player1")
-            m_score1 += 1;
-        else
-            m_score2 += 1;
+        if (!playerScoreMap.containsKey(playerName)) throw new IllegalArgumentException("Invalid player name");
+        playerScoreMap.put(playerName, playerScoreMap.get(playerName) + 1);
     }
 
     public String getScore() {
-        String score = "";
-        int tempScore=0;
-        if (m_score1==m_score2)
-        {
-            switch (m_score1)
-            {
-                case 0:
-                        score = "Love-All";
-                    break;
-                case 1:
-                        score = "Fifteen-All";
-                    break;
-                case 2:
-                        score = "Thirty-All";
-                    break;
-                default:
-                        score = "Deuce";
-                    break;
-                
-            }
+        int player1Score = playerScoreMap.get(PLAYER1_NAME);
+        int player2Score = playerScoreMap.get(PLAYER2_NAME);
+
+        if (player1Score == player2Score) {
+            return handleEqualScore(player1Score);
+        } else if (eitherBeyondFour(player1Score, player2Score)) {
+            return handleBeyondFour(player1Score - player2Score);
         }
-        else if (m_score1>=4 || m_score2>=4)
-        {
-            int minusResult = m_score1-m_score2;
-            if (minusResult==1) score ="Advantage player1";
-            else if (minusResult ==-1) score ="Advantage player2";
-            else if (minusResult>=2) score = "Win for player1";
-            else score ="Win for player2";
-        }
-        else
-        {
-            for (int i=1; i<3; i++)
-            {
-                if (i==1) tempScore = m_score1;
-                else { score+="-"; tempScore = m_score2;}
-                switch(tempScore)
-                {
-                    case 0:
-                        score+="Love";
-                        break;
-                    case 1:
-                        score+="Fifteen";
-                        break;
-                    case 2:
-                        score+="Thirty";
-                        break;
-                    case 3:
-                        score+="Forty";
-                        break;
-                }
-            }
-        }
-        return score;
+        return scoreTermMap.get(player1Score) + "-" + scoreTermMap.get(player2Score);
+    }
+
+    private String handleBeyondFour(int scoreDiff) {
+        if (Math.abs(scoreDiff) >= 2) return handleWin(scoreDiff);
+        return handleAdv(scoreDiff);
+    }
+
+    private String handleWin(int scoreDiff) {
+        if (scoreDiff >= 2) return "Win for player1";
+        return "Win for player2";
+    }
+
+    private String handleAdv(int scoreDiff) {
+        if (scoreDiff == 1) return "Advantage player1";
+        return "Advantage player2";
+    }
+
+    private String handleEqualScore(int score) {
+        if (score >= 3) return "Deuce";
+        return scoreTermMap.get(score) + "-All";
+    }
+
+    private boolean eitherBeyondFour(int player1Score, int player2Score) {
+        return player1Score >= 4 || player2Score >= 4;
     }
 }
